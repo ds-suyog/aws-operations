@@ -73,6 +73,8 @@ for bucket in s3_resource.buckets.all():
 # status = s3_resource.Bucket(bucketname).put_object(Key='data/office1.jpg/', Body=data)
 # print("status = {}".format(status))
 
+# s3_resource.Bucket(bucketname).upload_file('/local/file/here.txt','folder/sub/path/to/s3key')
+
 # Download file
 #def download_file(bucketname, s3key, localpath)
 try:
@@ -83,11 +85,8 @@ except botocore.exceptions.ClientError as e:
     else:
         raise
 
-key = s3_resource.Bucket(bucketname).get_key('data/office1.jpg/')
-key.get_contents_to_filename('dd.jpg')
-
-# obj = s3_resource.Bucket(bucketname).Object('code/test.py')
-# print("obj type = {}".format(type(obj)))
+obj = s3_resource.Object(bucketname, 'code/test.py/')
+print(type(obj, obj.content_length, obj.content_type))
 
 
 # # Empty bucket
