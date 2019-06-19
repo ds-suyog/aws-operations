@@ -2,6 +2,9 @@ import boto3
 
 # Let's use Amazon S3
 
+class S3Helper:
+    pass
+        
 # low-level client interface
 s3_client = boto3.client('s3')
 
@@ -36,29 +39,53 @@ def create_bucket(bucket_prefix, s3_connection):
     print("bucket name = {}, current_region = {}".format(bucket_name,current_region))
     return bucket_name, bucket_response
 
-# create bucket
+# # create bucket
 # bucket_name, response = create_bucket(
 # 	bucket_prefix='pythonbucket', 
 # 	s3_connection=s3resource.meta.client)
 
-# Output the bucket names by s3_client
-response = s3_client.list_buckets()
-print('Existing buckets:')
-for bucket in response['Buckets']:
-    print("bucket name = ", bucket["Name"])
+# # Output the bucket names by s3_client
+# response = s3_client.list_buckets()
+# print('Existing buckets:')
+# for bucket in response['Buckets']:
+#     print("bucket name = ", bucket["Name"])
+
+bucketname = ""
 
 # Print out bucket names by s3_resource
-print("iterating on buckets")
+print("iterating on buckets:")
 for bucket in s3_resource.buckets.all():
-    print("bucket name: = {}".format(bucket.name))
+    print("bucket name = {}".format(bucket.name))
+    bucketname = bucket.name
 
-# # Upload a new file
-# data = open('test.jpg', 'rb')
-# s3.Bucket('bucket11gg').put_object(Key='test.jpg', Body=data)
+# Upload a new file
+data = open('test.py', 'rb')
+s3_resource.Bucket(bucketname).put_object(Key='test.py', Body=data)
 
-bucket = s3_resource.Bucket('bucket_name')
-bucket.object_versions.delete()
+
+k = s3_resource.Bucket(bucketname).new_key('tmp/')
+k.set_contents_from_string('')
+
+
+# for bucket in s3_resource.buckets.all():
+#     print("bucket = {} ".format(bucket))
+#     print(bucket.get_available_subresources())
+#     for key in bucket.objects.all():
+#         print(key.key)
+
+k = bucket.new_key('tmp/')
+k.set_contents_from_string('')
+
+# # Empty bucket
+# for bucket in s3_resource.buckets.all():
+#     bucket = s3_resource.Bucket(bucket.name)
+#     bucket.object_versions.delete()
+
+# # must delete all keys before deleting bucket
+# for key in bucket.objects.all():
+#     key.delete()
+# bucket.delete()
 
 for bucket in s3_resource.buckets.all():
-    print("bucket name: = {}".format(bucket.name))
+    print("bucket name = {}".format(bucket.name))
 
