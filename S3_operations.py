@@ -73,21 +73,26 @@ for bucket in s3_resource.buckets.all():
 # status = s3_resource.Bucket(bucketname).put_object(Key='data/office1.jpg/', Body=data)
 # print("status = {}".format(status))
 
-# s3_resource.Bucket(bucketname).upload_file('/local/file/here.txt','folder/sub/path/to/s3key')
+# #alternate way
+# s3_resource.Bucket(bucketname).upload_file('test.py','code/test.py/')
+
 
 # Download file
 #def download_file(bucketname, s3key, localpath)
-try:
-    s3_resource.Bucket(bucketname).download_file('code/test.py/', 'test.py')
-except botocore.exceptions.ClientError as e:
-    if e.response['Error']['Code'] == "404":
-        print("The object does not exist.")
-    else:
-        raise
+# try:
+#     s3_resource.Bucket(bucketname).download_file('code/test.py/', 'test.py')
+# except botocore.exceptions.ClientError as e:
+#     if e.response['Error']['Code'] == "404":
+#         print("The object does not exist.")
+#     else:
+#         raise
 
-obj = s3_resource.Object(bucketname, 'code/test.py/')
-print(type(obj, obj.content_length, obj.content_type))
-
+# # access object
+# obj = s3_resource.Object(bucketname, 'code/test.py/')
+# body = obj.get()['Body'].read().decode('utf-8')
+# print("obj type = {}, \nobj.content_length = {}, \nobj.content_type = {}, \nbody = {}".format(type(obj), 
+#     obj.content_length, obj.content_type, body))
+# obj.delete() # deleted folder
 
 # # Empty bucket
 # for bucket in s3_resource.buckets.all():
@@ -100,6 +105,4 @@ print(type(obj, obj.content_length, obj.content_type))
 #     key.delete()
 # bucket.delete()
 
-for bucket in s3_resource.buckets.all():
-    print("bucket name = {}".format(bucket.name))
 
