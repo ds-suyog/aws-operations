@@ -44,7 +44,7 @@ class S3Helper:
             bucketname = bucket.name
             #print(bucket.get_available_subresources())
             for key in bucket.objects.all():
-                print("key.key = {}, size = {} KB".format(key.key, key.size/1024))
+                print("key.key = {}, size = {}".format(key.key, key.size/1024))
 
     def bucket_iterator(self, s3_resource, bucketname):
         """ Iterates over respective keys of particular bucket
@@ -52,7 +52,7 @@ class S3Helper:
         bucket = s3_resource.Bucket(bucketname)
         print("********** bucket name = {}".format(bucket.name))        
         for key in bucket.objects.all():
-            print("key.key = {}, size = {} KB".format(key.key, key.size/1024))
+            print("key.key = {}, size = {} KB".format(key.key, self.prettify_size(key.size)))
 
     def buckets_iter_s3client(self, s3_client):
         """Output the bucket names by s3_client
@@ -97,7 +97,7 @@ class S3Helper:
     def access_object(self, s3_resource, bucketname, key):
         obj = s3_resource.Object(bucketname, key)
         body = obj.get()['Body'].read().decode('utf-8')
-        body_str = "-----------------------------------start\n{}\n-----------------------------------end".format(body)
+        body_str = "-----------------------------------body start\n{}\n-----------------------------------body end".format(body)
         size = obj.content_length
         size_str = self.prettify_size(size)
         print("************* Details of object:\nobj type = {}, \nobj.content_length = {}, \nobj.content_type = {}, \nbody = \n{}".format(type(obj), 
