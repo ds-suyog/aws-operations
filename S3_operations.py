@@ -44,7 +44,7 @@ class S3Helper:
             bucketname = bucket.name
             #print(bucket.get_available_subresources())
             for key in bucket.objects.all():
-                print("     key.key = {}, size = {} KB".format(key.key, key.size/1024))
+                print("key.key = {}, size = {} KB".format(key.key, key.size/1024))
 
     def bucket_iterator(self, s3_resource, bucketname):
         """ Iterates over respective keys of particular bucket
@@ -52,7 +52,7 @@ class S3Helper:
         bucket = s3_resource.Bucket(bucketname)
         print("********** bucket name = {}".format(bucket.name))        
         for key in bucket.objects.all():
-            print("     key.key = {}, size = {} KB".format(key.key, key.size/1024))
+            print("key.key = {}, size = {} KB".format(key.key, key.size/1024))
 
     def buckets_iter_s3client(self, s3_client):
         """Output the bucket names by s3_client
@@ -97,12 +97,11 @@ class S3Helper:
     def access_object(self, s3_resource, bucketname, key):
         obj = s3_resource.Object(bucketname, key)
         body = obj.get()['Body'].read().decode('utf-8')
+        body_str = "-----------------------------------start\n{}\n-----------------------------------end".format(body)
         size = obj.content_length
         size_str = self.prettify_size(size)
-        print("size_str = ", size_str)
-
         print("************* Details of object:\nobj type = {}, \nobj.content_length = {}, \nobj.content_type = {}, \nbody = \n{}".format(type(obj), 
-            size_str, obj.content_type, body))
+            size_str, obj.content_type, body_str))
 
     def delete_object(self, s3_resource, bucketname, key):
         # deleted folder
@@ -135,32 +134,34 @@ def main():
 
     if s3_helper._debug == 'True': print("current_region = {}".format(s3_helper.current_region()))
     
-    if s3_helper._debug == 'True': print('\ncreating bucket.')    
+    if s3_helper._debug == 'True': print('\ncreating bucket...')    
     bucket_name, response = s3_helper.create_bucket(s3_resource = s3_resource.meta.client, bucket_prefix = 'boto3bucket')
     #bucket_name = "boto3bucket08cdc9b1-2c60-4c7e-ad4b-09e437992d26"
 
-    if s3_helper._debug == 'True': print("\nuploading files") 
+    if s3_helper._debug == 'True': print("\nuploading files...") 
     s3_helper.upload_file('test.py', s3_resource, bucket_name, 'code/test.py/')
     s3_helper.upload_file('test.py', s3_resource, bucket_name, 'code/test2.py/')
     s3_helper.upload_file('office1.jpg', s3_resource, bucket_name, 'data/office1.jpg/')
 
-    if s3_helper._debug == 'True': print("\niterating over bucket's keys") 
+    if s3_helper._debug == 'True': print("\niterating over bucket's keys...") 
     s3_helper.bucket_iterator(s3_resource, bucket_name)
     #s3_helper.buckets_iterator(s3_resource)
     #s3_helper.buckets_iter_s3client(s3_client)
 
-    if s3_helper._debug == 'True': print('\naccessing object and displaying details') 
+    if s3_helper._debug == 'True': print('\naccessing object and displaying details...') 
     s3_helper.access_object(s3_resource, bucket_name, 'code/test.py/')
 
-    if s3_helper._debug == 'True': print("\ndownloading object")     
+    if s3_helper._debug == 'True': print("\ndownloading object...")     
     s3_helper.download_file(s3_resource, bucket_name, 'code/test2.py/','test2.py')
 
-    if s3_helper._debug == 'True': print("\ndeleting object") 
+    import os;os.remove('test2.py')
+
+    if s3_helper._debug == 'True': print("\ndeleting object...") 
     s3_helper.delete_object(s3_resource, bucket_name, 'code/test2.py/')
 
-    if s3_helper._debug == 'True': print("emptying bucket") 
+    if s3_helper._debug == 'True': print("\nemptying bucket...") 
     s3_helper.empty_bucket(s3_resource)
-    if s3_helper._debug == 'True': print("deleting bucket")     
+    if s3_helper._debug == 'True': print("\ndeleting bucket...")     
     s3_helper.delete_bucket(s3_resource, bucket_name)
 
 
