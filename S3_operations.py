@@ -2,12 +2,12 @@ import boto3
 import botocore
 
 class S3Helper:
-    """This is handcrafted helper class for easy reusability of AWS S3 operations.
+    """This is handcrafted helper class is for easy reusability of AWS S3 operations.
     Please configure your AWS before using this helper class
     """
 
-    def __init__(self):
-        pass      
+    def __init__(self, debug = 'False'):
+        self._debug = debug
 
     def current_region(self):
         session = boto3.session.Session()
@@ -19,7 +19,7 @@ class S3Helper:
         import uuid
         return ''.join([bucket_prefix, str(uuid.uuid4())])
 
-    def create_bucket(self, s3_resource, bucket_prefix, s3_resource):
+    def create_bucket(self, s3_resource, bucket_prefix):
         bucket_name = self.create_bucket_name(bucket_prefix)
         current_region = self.current_region()
 
@@ -36,34 +36,37 @@ class S3Helper:
         print("bucket name = {}, current_region = {}".format(bucket_name,current_region))
         return bucket_name, bucket_response
 
-    def bucket_iter_s3client(self, s3_client):
+    def buckets_iterator(self, s3_resource):
+        """ Iterates over buckets and their respective keys
+        """
+        for bucket in s3_resource.buckets.all():    
+            print("******** bucket name = {}".format(bucket.name))
+            bucketname = bucket.name
+            #print(bucket.get_available_subresources())
+            for key in bucket.objects.all():
+                print("     key.key = {}, size = {} KB".format(key.key, key.size/1024))
+
+    def bucket_iterator(self, s3_resource, bucketname):
+        """ Iterates over respective keys of particular bucket
+        """        
+        bucket = s3_resource.Bucket(bucketname)
+        print("********** bucket name = {}".format(bucket.name))        
+        for key in bucket.objects.all():
+            print("     key.key = {}, size = {} KB".format(key.key, key.size/1024))
+
+    def buckets_iter_s3client(self, s3_client):
         """Output the bucket names by s3_client
         """
         response = s3_client.list_buckets()
         for bucket in response['Buckets']:
             print("bucket name = ", bucket["Name"])
 
-    def bucket_iterator(self, s3_resource):
-        """ Iterates over buckets and their respective keys
-        """
-        print("iterating on buckets:")
-        for bucket in s3_resource.buckets.all():    
-            print("bucket name = {}".format(bucket.name))
-            bucketname = bucket.name
-            #print(bucket.get_available_subresources())
-            for key in bucket.objects.all():
-                print("key.key = {}, size = {} KB".format(key.key, key.size/1024))
-
-    def upload_file(self, s3_resource, bucketname, file_path, s3key):
+    def upload_file(self, file_path, s3_resource, bucketname, s3key):
         """Upload file based on file structure
         """
         data = open(file_path, 'rb')
-        status = s3_resource.Bucket(bucketname).put_object(Key='code/test.py/', Body=data)
-        print("status = {}".format(status))
-
-        data = open('office1.jpg', 'rb')
-        status = s3_resource.Bucket(bucketname).put_object(Key='data/office1.jpg/', Body=data)
-        print("status = {}".format(status))
+        status = s3_resource.Bucket(bucketname).put_object(Key=s3key, Body=data)
+        if self._debug == 'True': print("status = {}".format(status))
 
         # #alternate way
         # s3_resource.Bucket(bucketname).upload_file('test.py','code/test.py/')
@@ -77,11 +80,29 @@ class S3Helper:
             else:
                 raise
 
+    def prettify_size(self, size):
+        one_kb, one_mb, one_gb, one_tb = 1024, 1024*1024, 1024*1024*1024, 1024*1024*1024*1024
+        if size < one_kb:
+            size_str = "{} Bytes".format(size)
+        elif one_kb <= size < one_mb:
+            size_str = "{} KB".format(round(size/1024, 2))
+        elif one_mb <= size < one_gb:
+            size_str = "{} MB".format(round(size/(1024*1024),2))
+        elif one_gb <= size < one_tb:
+            size_str = "{} GB".format(round(size/(1024*1024*1024),2))
+        elif one_tb <= size:
+            size_str = "{} TB".format(round(size/(1024*1024*1024*1024),2))
+        return size_str
+
     def access_object(self, s3_resource, bucketname, key):
         obj = s3_resource.Object(bucketname, key)
         body = obj.get()['Body'].read().decode('utf-8')
-        print("obj type = {}, \nobj.content_length = {}, \nobj.content_type = {}, \nbody = {}".format(type(obj), 
-            obj.content_length, obj.content_type, body))
+        size = obj.content_length
+        size_str = self.prettify_size(size)
+        print("size_str = ", size_str)
+
+        print("************* Details of object:\nobj type = {}, \nobj.content_length = {}, \nobj.content_type = {}, \nbody = \n{}".format(type(obj), 
+            size_str, obj.content_type, body))
 
     def delete_object(self, s3_resource, bucketname, key):
         # deleted folder
@@ -104,7 +125,7 @@ class S3Helper:
 
 def main():
     s3_helper = S3Helper()
-    bucketname = "pythonbucket0a75811f-efa3-4d85-927e-b89c71cf914f"
+    s3_helper = S3Helper(debug = 'True')
 
     # low-level client interface
     s3_client = boto3.client('s3')
@@ -112,28 +133,36 @@ def main():
     # high-level interface
     s3_resource = boto3.resource('s3')
 
-    print("current_region = {}".format(s3_helper.current_region()))
+    if s3_helper._debug == 'True': print("current_region = {}".format(s3_helper.current_region()))
     
-    #bucket_name, response = self.create_bucket(bucket_prefix = 'pythonbucket', s3_resource = s3_resource.meta.client)
+    if s3_helper._debug == 'True': print('\ncreating bucket.')    
+    bucket_name, response = s3_helper.create_bucket(s3_resource = s3_resource.meta.client, bucket_prefix = 'boto3bucket')
+    #bucket_name = "boto3bucket08cdc9b1-2c60-4c7e-ad4b-09e437992d26"
 
-    #s3_helper.bucket_iterator(s3_resource)
-    #print("bucketname = ", bucketname)
-    #s3_helper.bucket_iter_s3client(s3_client)
+    if s3_helper._debug == 'True': print("\nuploading files") 
+    s3_helper.upload_file('test.py', s3_resource, bucket_name, 'code/test.py/')
+    s3_helper.upload_file('test.py', s3_resource, bucket_name, 'code/test2.py/')
+    s3_helper.upload_file('office1.jpg', s3_resource, bucket_name, 'data/office1.jpg/')
 
-    #s3_helper.upload_file(s3_resource, bucketname, 'code/test.py/', 'test.py')
+    if s3_helper._debug == 'True': print("\niterating over bucket's keys") 
+    s3_helper.bucket_iterator(s3_resource, bucket_name)
+    #s3_helper.buckets_iterator(s3_resource)
+    #s3_helper.buckets_iter_s3client(s3_client)
 
-    s3_helper.access_object(s3_resource, bucketname, 'code/test.py/')
-    
-    #s3_helper.download_file(s3_resource, bucketname, 'code/test.py/','test.py')
+    if s3_helper._debug == 'True': print('\naccessing object and displaying details') 
+    s3_helper.access_object(s3_resource, bucket_name, 'code/test.py/')
 
-    #s3_helper.delete_object(s3_resource, bucketname, 'code/test.py/')
-    #s3_helper.empty_bucket(s3_resource)
-    #s3_helper.delete_bucket(s3_resource, bucketname)
+    if s3_helper._debug == 'True': print("\ndownloading object")     
+    s3_helper.download_file(s3_resource, bucket_name, 'code/test2.py/','test2.py')
+
+    if s3_helper._debug == 'True': print("\ndeleting object") 
+    s3_helper.delete_object(s3_resource, bucket_name, 'code/test2.py/')
+
+    if s3_helper._debug == 'True': print("emptying bucket") 
+    s3_helper.empty_bucket(s3_resource)
+    if s3_helper._debug == 'True': print("deleting bucket")     
+    s3_helper.delete_bucket(s3_resource, bucket_name)
 
 
 if __name__ == '__main__':
     main()
-
-if __name__ == '__main__':
-    main()
-
