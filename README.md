@@ -2,5 +2,5 @@
 
 ## S3 Demo:				
 		
-![Imgur Image](https://imgur.com/4XGT2Fn.jpg)
+![Imgur Image](https://imgur.com/JbPERNf.jpg)
 
