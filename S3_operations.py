@@ -2,7 +2,7 @@ import boto3
 import botocore
 
 class S3Helper:
-    """This is handcrafted helper class is for easy reusability of AWS S3 operations.
+    """This handcrafted helper class is for easy reusability of AWS S3 operations.
     Please configure your AWS before using this helper class
     """
 
